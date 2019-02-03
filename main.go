@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/eskoltech/ethstats/message"
@@ -12,6 +13,8 @@ import (
 )
 
 const (
+	MSG_HELLO string = "hello"
+
 	API     string = "/api"
 	VERSION string = "v0.1.0"
 	BANNER  string = `
@@ -55,16 +58,23 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			break
 		}
+		// Create emitted message from the node
 		msg := message.Emit{Content: content}
-		rsp, err := msg.Response()
-		if err != nil {
-			log.Print(err)
-			break
-		}
-		err = c.WriteMessage(mt, rsp)
-		if err != nil {
-			log.Print(err)
-			break
+
+		// If message type is hello, we need to check if the secret is
+		// correct, and then, send a ready message
+		if msg.GetType() == MSG_HELLO {
+			ready := map[string][]interface{}{"emit": {"ready"}}
+			response, err := json.Marshal(ready)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+			err = c.WriteMessage(mt, response)
+			if err != nil {
+				log.Print(err)
+				return
+			}
 		}
 	}
 }

@@ -2,7 +2,6 @@ package message
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 )
 
@@ -20,16 +19,4 @@ func (e *Emit) GetType() string {
 	}
 	result, _ := content["emit"][0].(string)
 	return result
-}
-
-// Response is the content to send to the Ethereum stats node
-func (e *Emit) Response() ([]byte, error) {
-	if e.GetType() == "hello" {
-		ready := map[string][]interface{}{
-			"emit": {"ready"},
-		}
-		response, err := json.Marshal(ready)
-		return response, err
-	}
-	return nil, errors.New("unknown message type")
 }
