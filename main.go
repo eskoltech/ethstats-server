@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/eskoltech/ethstats/message"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/eskoltech/ethstats/message"
 	"github.com/gorilla/websocket"
 )
 

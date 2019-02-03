@@ -3,10 +3,10 @@
 package websocket
 
 import (
-	"crypto/tls"
-	"net/http/httptrace"
+  "crypto/tls"
+  "net/http/httptrace"
 )
 
 func doHandshakeWithTrace(trace *httptrace.ClientTrace, tlsConn *tls.Conn, cfg *tls.Config) error {
-	return doHandshake(tlsConn, cfg)
+  return doHandshake(tlsConn, cfg)
 }
