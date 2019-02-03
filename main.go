@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/eskoltech/ethstats/message"
 	"log"
 	"net/http"
 	"strings"
@@ -30,7 +31,6 @@ var upgradeConnection = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return strings.Compare(r.RequestURI, API) == 0
 	},
-	Subprotocols: []string{"ws", "wss"},
 }
 
 // handleRequest is the function to handle all server requests...
@@ -44,7 +44,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	// Close connection if an unexpected error occurs
 	defer func(conn *websocket.Conn) {
 		err := conn.Close()
-		log.Println("Closed connection...")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -52,9 +51,19 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Server loop
 	for {
-		_, _, err := c.ReadMessage()
+		mt, content, err := c.ReadMessage()
 		if err != nil {
-			// Connection close by the origin
+			break
+		}
+		msg := message.Emit{Content: content}
+		rsp, err := msg.Response()
+		if err != nil {
+			log.Print(err)
+			break
+		}
+		err = c.WriteMessage(mt, rsp)
+		if err != nil {
+			log.Print(err)
 			break
 		}
 	}
