@@ -23,9 +23,7 @@ _/ __ \   __\  |  \ /  ___/\   __\__  \\   __\/  ___/
 `
 )
 
-var (
-	addr = flag.String("addr", "localhost:3000", "http service address")
-)
+var addr = flag.String("addr", "localhost:3000", "http service address")
 
 // upgradeConnection allows
 var upgradeConnection = websocket.Upgrader{
@@ -39,10 +37,18 @@ var upgradeConnection = websocket.Upgrader{
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 	c, err := upgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgradeConnection:", err)
+		log.Println(err)
 		return
 	}
-	defer c.Close()
+
+	// Close connection if an unexpected error occurs
+	defer func(conn *websocket.Conn) {
+		err := conn.Close()
+		log.Println("Closed connection...")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(c)
 
 	// Server loop
 	for {
@@ -57,7 +63,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 	fmt.Printf(BANNER, VERSION)
-	log.Printf("Starting server on %s", *addr)
+	log.Printf("Starting websocket server in %s", *addr)
+
 	http.HandleFunc(API, handleRequest)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
