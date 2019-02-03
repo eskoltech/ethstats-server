@@ -2,7 +2,6 @@ package message
 
 import (
 	"encoding/json"
-	"log"
 )
 
 // Message contains the Ethereum message
@@ -11,23 +10,23 @@ type Message struct {
 }
 
 // GetType return the type of the message sent by the Ethereum node
-func (e *Message) GetType() string {
+func (e *Message) GetType() (string, error) {
 	var content map[string][]interface{}
 	err := json.Unmarshal([]byte(e.Content), &content)
 	if err != nil {
-		log.Println(err)
+		return "", err
 	}
 	result, _ := content["emit"][0].(string)
-	return result
+	return result, nil
 }
 
-func (e *Message) GetValue() []byte {
+func (e *Message) GetValue() ([]byte, error) {
 	var content map[string][]interface{}
 	err := json.Unmarshal([]byte(e.Content), &content)
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 	result, _ := content["emit"][1].(interface{})
-	val, _ := json.Marshal(result)
-	return val
+	val, err := json.Marshal(result)
+	return val, err
 }

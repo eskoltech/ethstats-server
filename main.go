@@ -64,10 +64,15 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// Create emitted message from the node
 		msg := message.Message{Content: content}
+		msgType, err := msg.GetType()
+		if err != nil {
+			log.Print(err)
+			return
+		}
 
 		// If message type is hello, we need to check if the secret is
 		// correct, and then, send a ready message
-		if msg.GetType() == MessageHello {
+		if msgType == MessageHello {
 			ready := map[string][]interface{}{"emit": {"ready"}}
 			response, err := json.Marshal(ready)
 			if err != nil {
@@ -81,7 +86,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			}
 			// Get value from JSON to store it and process it later to calculate
 			// node latency etc
-			authMsg, err := parseAuthMessage(msg.GetValue())
+			authMsg, err := parseAuthMessage(msg)
 			if err != nil {
 				log.Print(err)
 				return
@@ -93,12 +98,18 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 // parseAuthMessage parse the current byte array and transforms it to an AuthMessage struct.
 // If an error occurs when json unmarshal, an error is returned
-func parseAuthMessage(value []byte) (message.AuthMessage, error) {
+func parseAuthMessage(msg message.Message) (message.AuthMessage, error) {
+	value, err := msg.GetValue()
+	if err != nil {
+		return message.AuthMessage{}, err
+	}
 	var detail message.AuthMessage
-	err := json.Unmarshal(value, &detail)
+	err = json.Unmarshal(value, &detail)
 	return detail, err
 }
 
+// main is the program entry point. If the server secret is not set when
+// init, the server can't start
 func main() {
 	flag.Parse()
 	fmt.Printf(BANNER, VERSION)
