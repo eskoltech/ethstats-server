@@ -56,7 +56,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}(c)
 
-	// Server loop
 	for {
 		mt, content, err := c.ReadMessage()
 		if err != nil {
@@ -73,6 +72,21 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		// If message type is hello, we need to check if the secret is
 		// correct, and then, send a ready message
 		if msgType == MessageHello {
+			// Get value from JSON to store it and process it later to calculate
+			// node latency etc
+			authMsg, parseError := parseAuthMessage(msg)
+			if parseError != nil {
+				log.Print(parseError)
+				return
+			}
+			log.Printf("Auth message from '%s' node for network %s, node=%s",
+				authMsg.ID, authMsg.Info.Network, authMsg.Info.Node)
+
+			// first check if the secret is correct
+			if authMsg.Secret != *secret {
+				log.Printf("Invalid secret from node %s", authMsg.ID)
+				return
+			}
 			ready := map[string][]interface{}{"emit": {"ready"}}
 			response, err := json.Marshal(ready)
 			if err != nil {
@@ -84,13 +98,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Print(err)
 				return
 			}
-			// Get value from JSON to store it and process it later to calculate
-			// node latency etc
-			authMsg, err := parseAuthMessage(msg)
-			if err != nil {
-				log.Print(err)
-				return
-			}
+			// When the message is correctly sent, save the node
 			nodeInfo[authMsg.ID] = append(nodeInfo[authMsg.ID], authMsg.Info)
 		}
 	}
