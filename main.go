@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MSG_HELLO string = "hello"
+	MessageHello string = "hello"
 
 	API     string = "/api"
 	VERSION string = "v0.1.0"
@@ -59,11 +59,11 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		// Create emitted message from the node
-		msg := message.Emit{Content: content}
+		msg := message.Message{Content: content}
 
 		// If message type is hello, we need to check if the secret is
 		// correct, and then, send a ready message
-		if msg.GetType() == MSG_HELLO {
+		if msg.GetType() == MessageHello {
 			ready := map[string][]interface{}{"emit": {"ready"}}
 			response, err := json.Marshal(ready)
 			if err != nil {
