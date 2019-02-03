@@ -27,7 +27,8 @@ _/ __ \   __\  |  \ /  ___/\   __\__  \\   __\/  ___/
 `
 )
 
-var addr = flag.String("addr", "localhost:3000", "http service address")
+var addr = flag.String("addr", "localhost:3000", "HTTP service address")
+var secret = flag.String("secret", "", "Server secret")
 
 // upgradeConnection allows
 var upgradeConnection = websocket.Upgrader{
@@ -35,6 +36,9 @@ var upgradeConnection = websocket.Upgrader{
 		return strings.Compare(r.RequestURI, API) == 0
 	},
 }
+
+// nodeInfo is the list of current connected nodes
+var nodeInfo = make(map[string][]message.NodeInfo)
 
 // handleRequest is the function to handle all server requests...
 func handleRequest(w http.ResponseWriter, r *http.Request) {
@@ -75,15 +79,35 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Print(err)
 				return
 			}
+			// Get value from JSON to store it and process it later to calculate
+			// node latency etc
+			authMsg, err := parseAuthMessage(msg.GetValue())
+			if err != nil {
+				log.Print(err)
+				return
+			}
+			nodeInfo[authMsg.ID] = append(nodeInfo[authMsg.ID], authMsg.Info)
 		}
 	}
+}
+
+// parseAuthMessage parse the current byte array and transforms it to an AuthMessage struct.
+// If an error occurs when json unmarshal, an error is returned
+func parseAuthMessage(value []byte) (message.AuthMessage, error) {
+	var detail message.AuthMessage
+	err := json.Unmarshal(value, &detail)
+	return detail, err
 }
 
 func main() {
 	flag.Parse()
 	fmt.Printf(BANNER, VERSION)
-	log.Printf("Starting websocket server in %s", *addr)
 
+	// check if server secret is valid
+	if *secret == "" {
+		log.Fatalln("Server secret can't be empty")
+	}
+	log.Printf("Starting websocket server in %s", *addr)
 	http.HandleFunc(API, handleRequest)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
