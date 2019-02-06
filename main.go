@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/eskoltech/ethstats/message"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/eskoltech/ethstats/message"
 	"github.com/gorilla/websocket"
 )
 
 const (
-	messageHello string = "hello"
-	messagePing         = "node-ping"
+	messageHello   string = "hello"
+	messagePing           = "node-ping"
+	messageLatency        = "latency"
 
 	api     string = "/api"
 	version string = "v0.1.0\n"
@@ -40,7 +41,7 @@ var upgradeConnection = websocket.Upgrader{
 
 // handleRequest is the function to handle all server requests...
 func handleRequest(w http.ResponseWriter, r *http.Request) {
-	c, err := upgradeConnection.Upgrade(w, r, nil)
+	nodeConn, err := upgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
@@ -52,10 +53,10 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-	}(c)
+	}(nodeConn)
 
 	for {
-		_, content, err := c.ReadMessage()
+		_, content, err := nodeConn.ReadMessage()
 		if err != nil {
 			break
 		}
@@ -85,7 +86,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Invalid secret from node %s", authMsg.ID)
 				return
 			}
-			sendError := authMsg.SendResponse(c)
+			sendError := authMsg.SendResponse(nodeConn)
 			if sendError != nil {
 				log.Print(sendError)
 			}
@@ -100,12 +101,21 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Print(err)
 				return
 			}
-			log.Printf("Received ping from '%s'", ping.ID)
-			sendError := ping.SendResponse(c)
+			sendError := ping.SendResponse(nodeConn)
 			if sendError != nil {
 				log.Print(sendError)
 			}
 			log.Printf("Server sent pong to node '%s'", ping.ID)
+		}
+
+		// Latency from nodes connected to this server.
+		if msgType == messageLatency {
+			latency, err := msg.GetValue()
+			if err != nil {
+				log.Print(err)
+				return
+			}
+			log.Printf("Latency: %s", latency)
 		}
 	}
 }
