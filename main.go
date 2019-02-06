@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/eskoltech/ethstats/broadcast"
 	"github.com/eskoltech/ethstats/relay"
 	"log"
 	"net/http"
@@ -38,5 +39,9 @@ func main() {
 	// Node relay configuration
 	nodeRelay := &relay.NodeRelay{Secret: *secret}
 	http.HandleFunc(relay.Api, nodeRelay.HandleRequest)
+
+	// Info sender configuration
+	infoSender := &broadcast.InfoSender{}
+	http.HandleFunc(broadcast.Root, infoSender.HandleRequest)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
