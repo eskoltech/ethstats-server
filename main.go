@@ -38,9 +38,6 @@ var upgradeConnection = websocket.Upgrader{
 	},
 }
 
-// nodeInfo is the list of current connected nodes
-var nodeInfo = make(map[string][]message.NodeInfo)
-
 // handleRequest is the function to handle all server requests...
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 	c, err := upgradeConnection.Upgrade(w, r, nil)
@@ -58,7 +55,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}(c)
 
 	for {
-		mt, content, err := c.ReadMessage()
+		_, content, err := c.ReadMessage()
 		if err != nil {
 			break
 		}
@@ -80,7 +77,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Print(parseError)
 				return
 			}
-			log.Printf("Auth message from '%s' node for network %s, node=%s",
+			log.Printf("Received auth message from '%s' node for network %s, node=%s",
 				authMsg.ID, authMsg.Info.Network, authMsg.Info.Node)
 
 			// first check if the secret is correct
@@ -88,19 +85,11 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Invalid secret from node %s", authMsg.ID)
 				return
 			}
-			ready := map[string][]interface{}{"emit": {"ready"}}
-			response, err := json.Marshal(ready)
-			if err != nil {
-				log.Print(err)
-				return
+			sendError := authMsg.SendResponse(c)
+			if sendError != nil {
+				log.Print(sendError)
 			}
-			err = c.WriteMessage(mt, response)
-			if err != nil {
-				log.Print(err)
-				return
-			}
-			// When the message is correctly sent, save the node
-			nodeInfo[authMsg.ID] = append(nodeInfo[authMsg.ID], authMsg.Info)
+			log.Printf("Node '%s' authorized", authMsg.ID)
 		}
 
 		// When the node emit a ping message, we need to respond with pong
@@ -135,14 +124,14 @@ func parseNodePingMessage(msg message.Message) (*message.NodePing, error) {
 
 // parseAuthMessage parse the current byte array and transforms it to an AuthMessage struct.
 // If an error occurs when json unmarshal, an error is returned
-func parseAuthMessage(msg message.Message) (message.AuthMessage, error) {
+func parseAuthMessage(msg message.Message) (*message.AuthMessage, error) {
 	value, err := msg.GetValue()
 	if err != nil {
-		return message.AuthMessage{}, err
+		return &message.AuthMessage{}, err
 	}
 	var detail message.AuthMessage
 	err = json.Unmarshal(value, &detail)
-	return detail, err
+	return &detail, err
 }
 
 // main is the program entry point. If the server secret is not set when
