@@ -14,6 +14,7 @@ import (
 
 const (
 	messageHello string = "hello"
+	messagePing         = "node-ping"
 
 	api     string = "/api"
 	version string = "v0.1.0"
@@ -101,7 +102,35 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			// When the message is correctly sent, save the node
 			nodeInfo[authMsg.ID] = append(nodeInfo[authMsg.ID], authMsg.Info)
 		}
+
+		// When the node emit a ping message, we need to respond with pong
+		// before five seconds to authorize that node to sent reports
+		if msgType == messagePing {
+			ping, err := parseNodePingMessage(msg)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+			log.Printf("Received ping from '%s'", ping.ID)
+			sendError := ping.SendResponse(c)
+			if sendError != nil {
+				log.Print(sendError)
+			}
+			log.Printf("Server sent pong to node '%s'", ping.ID)
+		}
 	}
+}
+
+// parseNodePingMessage parse the current ping message sent bu the Ethereum node
+// and creates a message.NodePing struct with that info
+func parseNodePingMessage(msg message.Message) (*message.NodePing, error) {
+	value, err := msg.GetValue()
+	if err != nil {
+		return &message.NodePing{}, err
+	}
+	var ping message.NodePing
+	err = json.Unmarshal(value, &ping)
+	return &ping, err
 }
 
 // parseAuthMessage parse the current byte array and transforms it to an AuthMessage struct.
