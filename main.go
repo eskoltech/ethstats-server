@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	MessageHello string = "hello"
+	messageHello string = "hello"
 
-	API     string = "/api"
-	VERSION string = "v0.1.0"
-	BANNER  string = `
+	api     string = "/api"
+	version string = "v0.1.0"
+	banner  string = `
         __  .__              __          __          
   _____/  |_|  |__   _______/  |______ _/  |_  ______
 _/ __ \   __\  |  \ /  ___/\   __\__  \\   __\/  ___/
@@ -33,7 +33,7 @@ var secret = flag.String("secret", "", "Server secret")
 // upgradeConnection allows
 var upgradeConnection = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return strings.Compare(r.RequestURI, API) == 0
+		return strings.Compare(r.RequestURI, api) == 0
 	},
 }
 
@@ -71,7 +71,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 		// If message type is hello, we need to check if the secret is
 		// correct, and then, send a ready message
-		if msgType == MessageHello {
+		if msgType == messageHello {
 			// Get value from JSON to store it and process it later to calculate
 			// node latency etc
 			authMsg, parseError := parseAuthMessage(msg)
@@ -120,13 +120,13 @@ func parseAuthMessage(msg message.Message) (message.AuthMessage, error) {
 // init, the server can't start
 func main() {
 	flag.Parse()
-	fmt.Printf(BANNER, VERSION)
+	fmt.Printf(banner, version)
 
 	// check if server secret is valid
 	if *secret == "" {
 		log.Fatalln("Server secret can't be empty")
 	}
 	log.Printf("Starting websocket server in %s", *addr)
-	http.HandleFunc(API, handleRequest)
+	http.HandleFunc(api, handleRequest)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }

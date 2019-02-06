@@ -20,6 +20,7 @@ func (e *Message) GetType() (string, error) {
 	return result, nil
 }
 
+// GetValue retrieve the current content of the emitted message by the node
 func (e *Message) GetValue() ([]byte, error) {
 	var content map[string][]interface{}
 	err := json.Unmarshal([]byte(e.Content), &content)
