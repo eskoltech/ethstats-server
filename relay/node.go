@@ -30,7 +30,8 @@ type NodeRelay struct {
 	Secret string
 }
 
-// handleRequest is the function to handle all server requests...
+// HandleRequest is the function to handle all server requests that came from
+// Ethereum nodes
 func (n *NodeRelay) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	nodeConn, err := upgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
