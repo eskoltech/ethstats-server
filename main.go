@@ -17,7 +17,7 @@ const (
 	messagePing         = "node-ping"
 
 	api     string = "/api"
-	version string = "v0.1.0"
+	version string = "v0.1.0\n"
 	banner  string = `
         __  .__              __          __          
   _____/  |_|  |__   _______/  |______ _/  |_  ______
