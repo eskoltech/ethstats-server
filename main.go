@@ -46,17 +46,21 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	go loop(nodeConn)
+}
 
+// loop loops as long as the connection is alive and retrieves node packages
+func loop(c *websocket.Conn) {
 	// Close connection if an unexpected error occurs
 	defer func(conn *websocket.Conn) {
 		err := conn.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
-	}(nodeConn)
+	}(c)
 
 	for {
-		_, content, err := nodeConn.ReadMessage()
+		_, content, err := c.ReadMessage()
 		if err != nil {
 			break
 		}
@@ -86,7 +90,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Invalid secret from node %s", authMsg.ID)
 				return
 			}
-			sendError := authMsg.SendResponse(nodeConn)
+			sendError := authMsg.SendResponse(c)
 			if sendError != nil {
 				log.Print(sendError)
 			}
@@ -101,7 +105,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				log.Print(err)
 				return
 			}
-			sendError := ping.SendResponse(nodeConn)
+			sendError := ping.SendResponse(c)
 			if sendError != nil {
 				log.Print(sendError)
 			}
