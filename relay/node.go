@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/eskoltech/ethstats/message"
+	"github.com/eskoltech/ethstats/service"
 	"github.com/gorilla/websocket"
 )
 
@@ -15,6 +16,10 @@ const (
 	messageHello   string = "hello"
 	messagePing    string = "node-ping"
 	messageLatency string = "latency"
+	messageBlock   string = "block"
+	messageHistory string = "history"
+	messagePending string = "pending"
+	messageStats   string = "stats"
 )
 
 // upgradeConnection upgrade only HTTP request to the /api endpoint
@@ -27,7 +32,8 @@ var upgradeConnection = websocket.Upgrader{
 // NodeRelay contains the secret used to authenticate the communication between
 // the Ethereum node and this server
 type NodeRelay struct {
-	Secret string
+	Secret  string
+	Service *service.Channel
 }
 
 // HandleRequest is the function to handle all server requests that came from
@@ -39,11 +45,11 @@ func (n *NodeRelay) HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Print("New Ethereum node connected!")
-	go loop(nodeConn, n.Secret)
+	go n.loop(nodeConn)
 }
 
 // loop loops as long as the connection is alive and retrieves node packages
-func loop(c *websocket.Conn, secret string) {
+func (n *NodeRelay) loop(c *websocket.Conn) {
 	// Close connection if an unexpected error occurs
 	defer func(conn *websocket.Conn) {
 		err := conn.Close()
@@ -75,11 +81,8 @@ func loop(c *websocket.Conn, secret string) {
 				log.Print(parseError)
 				return
 			}
-			log.Printf("Received auth message from '%s' node for network %s, node=%s",
-				authMsg.ID, authMsg.Info.Network, authMsg.Info.Node)
-
 			// first check if the secret is correct
-			if authMsg.Secret != secret {
+			if authMsg.Secret != n.Secret {
 				log.Printf("Invalid secret from node %s", authMsg.ID)
 				return
 			}
@@ -87,7 +90,9 @@ func loop(c *websocket.Conn, secret string) {
 			if sendError != nil {
 				log.Print(sendError)
 			}
-			log.Printf("Node '%s' authorized", authMsg.ID)
+			go func(s *service.Channel, a []byte) {
+				s.Message <- a
+			}(n.Service, content)
 		}
 
 		// When the node emit a ping message, we need to respond with pong
@@ -102,19 +107,24 @@ func loop(c *websocket.Conn, secret string) {
 			if sendError != nil {
 				log.Print(sendError)
 			}
-			log.Printf("Server sent pong to node '%s'", ping.ID)
+			go func(s *service.Channel, p []byte) {
+				s.Message <- p
+			}(n.Service, content)
 		}
 
-		// Latency from nodes connected to this server.
-		if msgType == messageLatency {
-			latency, err := msg.GetValue()
-			if err != nil {
-				log.Print(err)
-				return
-			}
-			log.Printf("Latency: %s", latency)
+		// Send the content sent by the nodes directly to the consumer clients.
+		// Only message types recognized by this server
+		if isValidMessage(msgType) {
+			go func(s *service.Channel, l []byte) {
+				s.Message <- l
+			}(n.Service, content)
 		}
 	}
+}
+
+// isValidMessage return true if the message type is know, otherwise return false
+func isValidMessage(msgType string) bool {
+	return msgType == messageLatency || msgType == messageBlock || msgType == messageHistory || msgType == messagePending || msgType == messageStats
 }
 
 // parseNodePingMessage parse the current ping message sent bu the Ethereum node

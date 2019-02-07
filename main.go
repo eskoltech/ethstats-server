@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/eskoltech/ethstats/broadcast"
-	"github.com/eskoltech/ethstats/relay"
 	"log"
 	"net/http"
+
+	"github.com/eskoltech/ethstats/broadcast"
+	"github.com/eskoltech/ethstats/relay"
+	"github.com/eskoltech/ethstats/service"
 )
 
 const (
@@ -36,12 +38,18 @@ func main() {
 	}
 	log.Printf("Starting websocket server in %s", *addr)
 
+	// Service channel to exchange info
+	channel := &service.Channel{
+		Message: make(chan []byte),
+	}
 	// Node relay configuration
-	nodeRelay := &relay.NodeRelay{Secret: *secret}
-	http.HandleFunc(relay.Api, nodeRelay.HandleRequest)
-
+	nodeRelay := &relay.NodeRelay{
+		Secret:  *secret,
+		Service: channel,
+	}
 	// Info sender configuration
-	infoSender := &broadcast.InfoSender{}
+	infoSender := broadcast.New(channel)
+	http.HandleFunc(relay.Api, nodeRelay.HandleRequest)
 	http.HandleFunc(broadcast.Root, infoSender.HandleRequest)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
