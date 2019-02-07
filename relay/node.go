@@ -33,8 +33,16 @@ var upgradeConnection = websocket.Upgrader{
 // NodeRelay contains the secret used to authenticate the communication between
 // the Ethereum node and this server
 type NodeRelay struct {
-	Secret  string
-	Service *service.Channel
+	secret  string
+	service *service.Channel
+}
+
+// New creates a new NodeRelay struct with required fields
+func New(service *service.Channel, secret string) *NodeRelay {
+	return &NodeRelay{
+		service: service,
+		secret:  secret,
+	}
 }
 
 // HandleRequest is the function to handle all server requests that came from
@@ -84,7 +92,7 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 				return
 			}
 			// first check if the secret is correct
-			if authMsg.Secret != n.Secret {
+			if authMsg.Secret != n.secret {
 				log.Errorf("Invalid secret from node %s, can't get stats", authMsg.ID)
 				return
 			}
@@ -95,7 +103,7 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 			}
 			go func(s *service.Channel, a []byte) {
 				s.Message <- a
-			}(n.Service, content)
+			}(n.service, content)
 		}
 
 		// When the node emit a ping message, we need to respond with pong
@@ -112,7 +120,7 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 			}
 			go func(s *service.Channel, p []byte) {
 				s.Message <- p
-			}(n.Service, content)
+			}(n.service, content)
 		}
 
 		// Send the content sent by the nodes directly to the consumer clients.
@@ -120,7 +128,7 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 		if isValidMessage(msgType) {
 			go func(s *service.Channel, l []byte) {
 				s.Message <- l
-			}(n.Service, content)
+			}(n.service, content)
 		}
 	}
 }
