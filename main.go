@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/eskoltech/ethstats/broadcast"
 	"github.com/eskoltech/ethstats/relay"
 	"github.com/eskoltech/ethstats/service"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

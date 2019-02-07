@@ -2,13 +2,13 @@ package relay
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/eskoltech/ethstats/message"
 	"github.com/eskoltech/ethstats/service"
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

@@ -1,12 +1,12 @@
 package broadcast
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/eskoltech/ethstats/service"
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 )
 
 // Root is the home endpoint where clients are registered to receive node updates
