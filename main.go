@@ -34,9 +34,9 @@ func main() {
 
 	// check if server secret is valid
 	if *secret == "" {
-		log.Fatalln("Server secret can't be empty")
+		log.Fatal("Server secret can't be empty")
 	}
-	log.Printf("Starting websocket server in %s", *addr)
+	log.Infof("Starting websocket server in %s", *addr)
 
 	// Service channel to exchange info
 	channel := &service.Channel{

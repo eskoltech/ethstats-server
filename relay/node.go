@@ -42,10 +42,10 @@ type NodeRelay struct {
 func (n *NodeRelay) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	nodeConn, err := upgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Warningf("Error establishing node connection: %s", err)
 		return
 	}
-	log.Print("New Ethereum node connected!")
+	log.Infof("New Ethereum node connected! (addr=%s, host=%s)", r.RemoteAddr, r.Host)
 	go n.loop(nodeConn)
 }
 
@@ -62,13 +62,14 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 	for {
 		_, content, err := c.ReadMessage()
 		if err != nil {
+			log.Errorf("Error reading message from client: %s", err)
 			break
 		}
 		// Create emitted message from the node
 		msg := message.Message{Content: content}
 		msgType, err := msg.GetType()
 		if err != nil {
-			log.Print(err)
+			log.Warningf("Can't get type of message sent by the node: %s", err)
 			return
 		}
 
@@ -79,17 +80,18 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 			// node latency etc
 			authMsg, parseError := parseAuthMessage(msg)
 			if parseError != nil {
-				log.Print(parseError)
+				log.Warningf("Can't parse authorization message sent by node[%s], error: %s", authMsg.ID, parseError)
 				return
 			}
 			// first check if the secret is correct
 			if authMsg.Secret != n.Secret {
-				log.Printf("Invalid secret from node %s", authMsg.ID)
+				log.Errorf("Invalid secret from node %s, can't get stats", authMsg.ID)
 				return
 			}
 			sendError := authMsg.SendResponse(c)
 			if sendError != nil {
-				log.Print(sendError)
+				log.Errorf("Error sending authorization response to node[%s], error: %s", authMsg.ID, sendError)
+				return
 			}
 			go func(s *service.Channel, a []byte) {
 				s.Message <- a
@@ -101,12 +103,12 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 		if msgType == messagePing {
 			ping, err := parseNodePingMessage(msg)
 			if err != nil {
-				log.Print(err)
+				log.Warningf("Can't parse ping message sent by node[%s], error: %s", ping.ID, err)
 				return
 			}
 			sendError := ping.SendResponse(c)
 			if sendError != nil {
-				log.Print(sendError)
+				log.Errorf("Error sending pong response to node[%s], error: %s", ping.ID, sendError)
 			}
 			go func(s *service.Channel, p []byte) {
 				s.Message <- p

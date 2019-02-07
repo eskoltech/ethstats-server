@@ -37,9 +37,12 @@ func New(service *service.Channel) *InfoSender {
 func (i *InfoSender) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	clientConn, err := upgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print(err)
+		log.Errorf("Error trying to establish communication with client (addr=%s, host=%s, URI=%s), %s",
+			r.RemoteAddr, r.Host, r.RequestURI, err)
+		return
 	}
 	i.clients[clientConn] = true
+	log.Infof("Connected new client! (host=%s)", r.Host)
 	go i.loop()
 }
 
@@ -48,6 +51,7 @@ func (i *InfoSender) loop() {
 	for {
 		msg := <-i.service.Message
 		if len(i.clients) == 0 {
+			log.Warning("No clients available to send stats from nodes")
 			break
 		}
 		i.writeMessage(msg)
