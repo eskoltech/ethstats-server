@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/eskoltech/ethstats/broadcast"
 	"github.com/eskoltech/ethstats/relay"
@@ -29,6 +30,10 @@ var secret = flag.String("secret", "", "Server secret")
 // main is the program entry point. If the server secret is not set when
 // init, the server can't start
 func main() {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: time.RFC3339,
+	})
 	flag.Parse()
 	fmt.Printf(banner, version)
 
