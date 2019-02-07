@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	// Api is the public endpoint used to send stats from nodes to this server
 	Api            string = "/api"
 	messageHello   string = "hello"
 	messagePing    string = "node-ping"
