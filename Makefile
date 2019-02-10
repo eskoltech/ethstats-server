@@ -6,8 +6,11 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
+base_version = 0.1.0
+
 ADDR := 192.168.0.20:3000
 SECRET := 123456789
+VERSION := $(base_version)-$(shell git rev-parse --short=7 HEAD)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -21,3 +24,9 @@ b:
 
 start: b
 	./build/bin/ethstats --secret ${SECRET} --addr ${ADDR}
+
+docker-build:
+	docker build -t eskoltech/ethstats:$(VERSION) .
+
+docker-start: docker-build
+	docker run -it -p 3000:3000 --name ethstats eskoltech/ethstats:$(VERSION) --secret $(SECRET) --addr $(ADDR)
