@@ -9,6 +9,7 @@ import (
 // hub maintain a list of registered clients to send messages
 type hub struct {
 	register chan *websocket.Conn
+	close    chan interface{}
 	clients  map[*websocket.Conn]bool
 	service  *service.Channel
 }
@@ -24,6 +25,9 @@ func (h *hub) loop() {
 			h.writeMessage(msg)
 		case client := <-h.register:
 			h.clients[client] = true
+		case <-h.close:
+			h.quit()
+			break
 		}
 	}
 }
@@ -35,10 +39,19 @@ func (h *hub) writeMessage(msg []byte) {
 		err := client.WriteMessage(1, msg)
 		if err != nil {
 			log.Infof("Closed connection with client: %s", client.RemoteAddr())
-
 			// close and delete the client connection and release
 			client.Close()
 			delete(h.clients, client)
 		}
 	}
+}
+
+func (h *hub) quit() {
+	log.Info("Closing all registered clients")
+	for client := range h.clients {
+		client.Close()
+		delete(h.clients, client)
+	}
+	close(h.register)
+	close(h.close)
 }

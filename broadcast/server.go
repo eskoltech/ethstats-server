@@ -28,11 +28,17 @@ type Server struct {
 func New(service *service.Channel) *Server {
 	hub := &hub{
 		register: make(chan *websocket.Conn),
+		close:    make(chan interface{}),
 		clients:  make(map[*websocket.Conn]bool),
 		service:  service,
 	}
 	go hub.loop()
 	return &Server{hub: hub}
+}
+
+// Close this server and all registered client connections
+func (s *Server) Close() {
+	s.hub.close <- "close"
 }
 
 // HandleRequest handle all request from hub that are not Ethereum nodes

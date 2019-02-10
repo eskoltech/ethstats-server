@@ -49,6 +49,7 @@ func main() {
 	}
 	nodeRelay := relay.New(channel, *secret)
 	server := broadcast.New(channel)
+	defer server.Close()
 
 	http.HandleFunc(relay.Api, nodeRelay.HandleRequest)
 	http.HandleFunc(broadcast.Root, server.HandleRequest)
