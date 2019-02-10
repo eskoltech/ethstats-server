@@ -24,7 +24,7 @@ _/ __ \   __\  |  \ /  ___/\   __\__  \\   __\/  ___/
 `
 )
 
-var addr = flag.String("addr", "localhost:3000", "HTTP service address")
+var addr = flag.String("addr", "localhost:3000", "Server address")
 var secret = flag.String("secret", "", "Server secret")
 
 // main is the program entry point. If the server secret is not set when
