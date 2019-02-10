@@ -48,9 +48,9 @@ func main() {
 		Message: make(chan []byte),
 	}
 	nodeRelay := relay.New(channel, *secret)
-	infoSender := broadcast.New(channel)
+	server := broadcast.New(channel)
 
 	http.HandleFunc(relay.Api, nodeRelay.HandleRequest)
-	http.HandleFunc(broadcast.Root, infoSender.HandleRequest)
+	http.HandleFunc(broadcast.Root, server.HandleRequest)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }

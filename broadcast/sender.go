@@ -19,52 +19,52 @@ var upgradeConnection = websocket.Upgrader{
 	},
 }
 
-// InfoSender is the responsible to send node state to registered clients
-type InfoSender struct {
+// Server is the responsible to send node state to registered clients
+type Server struct {
 	clients map[*websocket.Conn]bool
 	service *service.Channel
 }
 
-// New creates a new InfoSender struct with the required service
-func New(service *service.Channel) *InfoSender {
-	return &InfoSender{
+// New creates a new Server struct with the required service
+func New(service *service.Channel) *Server {
+	return &Server{
 		clients: make(map[*websocket.Conn]bool),
 		service: service,
 	}
 }
 
 // HandleRequest handle all request from clients that are not Ethereum nodes
-func (i *InfoSender) HandleRequest(w http.ResponseWriter, r *http.Request) {
+func (s *Server) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	clientConn, err := upgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
 		log.Errorf("Error trying to establish communication with client (addr=%s, host=%s, URI=%s), %s",
 			r.RemoteAddr, r.Host, r.RequestURI, err)
 		return
 	}
-	i.clients[clientConn] = true
+	s.clients[clientConn] = true
 	log.Infof("Connected new client! (host=%s)", r.Host)
-	go i.loop()
+	go s.loop()
 }
 
 // loop loops as the connection with the client is alive
-func (i *InfoSender) loop() {
+func (s *Server) loop() {
 	for {
-		msg := <-i.service.Message
-		if len(i.clients) == 0 {
+		msg := <-s.service.Message
+		if len(s.clients) == 0 {
 			log.Warning("No clients available to send stats from nodes")
 			break
 		}
-		i.writeMessage(msg)
+		s.writeMessage(msg)
 	}
 }
 
-func (i *InfoSender) writeMessage(msg []byte) {
-	for client := range i.clients {
+func (s *Server) writeMessage(msg []byte) {
+	for client := range s.clients {
 		err := client.WriteMessage(1, msg)
 		if err != nil {
 			// close and delete the client connection and release
 			client.Close()
-			delete(i.clients, client)
+			delete(s.clients, client)
 		}
 	}
 }
