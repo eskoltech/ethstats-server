@@ -48,6 +48,8 @@ func main() {
 		Message: make(chan []byte),
 	}
 	nodeRelay := relay.New(channel, *secret)
+	defer nodeRelay.Close()
+
 	server := broadcast.New(channel)
 	defer server.Close()
 

@@ -39,10 +39,17 @@ type NodeRelay struct {
 
 // New creates a new NodeRelay struct with required fields
 func New(service *service.Channel, secret string) *NodeRelay {
+	defer func() { log.Info("Node relay started successfully") }()
 	return &NodeRelay{
 		service: service,
 		secret:  secret,
 	}
+}
+
+// Close closes the connection between this server and all Ethereum nodes connected to it
+func (n *NodeRelay) Close() {
+	log.Info("Prepared to close connection with nodes...")
+	close(n.service.Message)
 }
 
 // HandleRequest is the function to handle all server requests that came from
@@ -65,12 +72,13 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Warning("Connection with node closed")
 	}(c)
 	// Client loop
 	for {
 		_, content, err := c.ReadMessage()
 		if err != nil {
-			log.Errorf("Error reading message from client: %s", err)
+			log.Errorf("Error reading message from client, %s", err)
 			break
 		}
 		// Create emitted message from the node

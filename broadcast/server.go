@@ -39,6 +39,7 @@ func New(service *service.Channel) *Server {
 
 // Close this server and all registered client connections
 func (s *Server) Close() {
+	log.Info("Prepared to close all client connections")
 	s.hub.close <- "close"
 }
 
