@@ -31,8 +31,8 @@ $ ethstats --secret 1234
 >**Note** that for default, the server is started at `localhost:3000` when is not started using `make start`
 
 You can view the default network options using the `-h` flag, and customize it for
-you requirements. Also, you can start the server using the `make start` command, and customize 
-the make flags to adapt it to your needs. You can modify this flags:
+your requirements. Also, you can start the server using the `make start` command, and customize 
+the `make` flags to adapt it to your needs. You can modify this flags:
 
 | **Variable** 	| **Description** 	| **Default**         	|
 |--------------	|-----------------	|---------------------	|
