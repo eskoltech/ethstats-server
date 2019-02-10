@@ -26,6 +26,7 @@ type Server struct {
 
 // New creates a new Server struct with the required service
 func New(service *service.Channel) *Server {
+	defer func() { log.Info("Server started successfully") }()
 	hub := &hub{
 		register: make(chan *websocket.Conn),
 		close:    make(chan interface{}),
