@@ -58,3 +58,6 @@ INFO[2019-02-10T17:19:23+01:00] Server started successfully
 
 Now you can attach nodes to report stats to this server using the address and port where 
 the server is listening.
+
+>**Docker fans**: you can build and run `ethstats` server using docker. Just execute the task `make docker-start`
+and you are ready to go!
