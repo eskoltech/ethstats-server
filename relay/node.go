@@ -109,9 +109,7 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 				log.Errorf("Error sending authorization response to node[%s], error: %s", authMsg.ID, sendError)
 				return
 			}
-			go func(s *service.Channel, a []byte) {
-				s.Message <- a
-			}(n.service, content)
+			n.service.Message <- content
 		}
 
 		// When the node emit a ping message, we need to respond with pong
@@ -126,17 +124,13 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 			if sendError != nil {
 				log.Errorf("Error sending pong response to node[%s], error: %s", ping.ID, sendError)
 			}
-			go func(s *service.Channel, p []byte) {
-				s.Message <- p
-			}(n.service, content)
+			n.service.Message <- content
 		}
 
 		// Send the content sent by the nodes directly to the consumer clients.
 		// Only message types recognized by this server
 		if isValidMessage(msgType) {
-			go func(s *service.Channel, l []byte) {
-				s.Message <- l
-			}(n.service, content)
+			n.service.Message <- content
 		}
 	}
 }
