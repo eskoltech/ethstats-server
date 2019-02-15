@@ -46,6 +46,7 @@ func main() {
 	// Service channel to exchange info
 	channel := &service.Channel{
 		Message: make(chan []byte),
+		Nodes:   make(map[string][]byte),
 	}
 	nodeRelay := relay.New(channel, *secret)
 	defer nodeRelay.Close()

@@ -4,4 +4,7 @@ package service
 type Channel struct {
 	// Message is the content of the stats reported by the Ethereum node
 	Message chan []byte
+
+	// Nodes registered to the relay server
+	Nodes map[string][]byte
 }

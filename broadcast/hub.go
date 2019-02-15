@@ -4,6 +4,7 @@ import (
 	"github.com/eskoltech/ethstats/service"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // hub maintain a list of registered clients to send messages
@@ -16,6 +17,7 @@ type hub struct {
 
 // loop loops as the server is alive and send messages to registered clients
 func (h *hub) loop() {
+	nodesReport := time.NewTicker(15 * time.Second)
 	for {
 		select {
 		case msg := <-h.service.Message:
@@ -28,6 +30,14 @@ func (h *hub) loop() {
 		case <-h.close:
 			h.quit()
 			break
+		case <-nodesReport.C:
+			if len(h.service.Nodes) == 0 {
+				// Don't send anything if no nodes connected...
+				continue
+			}
+			for _, v := range h.service.Nodes {
+				h.writeMessage(v)
+			}
 		}
 	}
 }

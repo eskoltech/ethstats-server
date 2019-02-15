@@ -66,13 +66,15 @@ func (n *NodeRelay) HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 // loop loops as long as the connection is alive and retrieves node packages
 func (n *NodeRelay) loop(c *websocket.Conn) {
-	// Close connection if an unexpected error occurs
+	// Close connection if an unexpected error occurs and delete the node
+	// from the map of connected nodes...
 	defer func(conn *websocket.Conn) {
+		delete(n.service.Nodes, conn.RemoteAddr().String())
 		err := conn.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Warning("Connection with node closed")
+		log.Warningf("Connection with node closed, there are %d connected nodes", len(n.service.Nodes))
 	}(c)
 	// Client loop
 	for {
@@ -110,6 +112,10 @@ func (n *NodeRelay) loop(c *websocket.Conn) {
 				return
 			}
 			n.service.Message <- content
+
+			// use node addr as identifier to check node availability
+			n.service.Nodes[c.RemoteAddr().String()] = content
+			log.Infof("Currently there are %d connected nodes", len(n.service.Nodes))
 		}
 
 		// When the node emit a ping message, we need to respond with pong
