@@ -12,7 +12,7 @@ If you want to build the `ethstats` server by yourself or start hacking on it,
 just install this repo using the command:
 
 ```bash
-$ go get -v github.com/eskoltech/ethstats
+$ go get -v github.com/eskoltech/ethstats-server
 ```
 
 Also, you can use the `make` utility to build an executable. Using `make b` will
