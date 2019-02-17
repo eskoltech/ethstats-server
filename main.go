@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/eskoltech/ethstats/broadcast"
-	"github.com/eskoltech/ethstats/relay"
-	"github.com/eskoltech/ethstats/service"
+	"github.com/eskoltech/ethstats-server/broadcast"
+	"github.com/eskoltech/ethstats-server/relay"
+	"github.com/eskoltech/ethstats-server/service"
 	log "github.com/sirupsen/logrus"
 )
 

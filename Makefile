@@ -20,13 +20,13 @@ VERSION := $(base_version)-$(shell git rev-parse --short=7 HEAD)
 #                 |___/
 
 b:
-	go build -o ./build/bin/ethstats
+	go build -o ./build/bin/ethstats-server
 
 start: b
-	./build/bin/ethstats --secret ${SECRET} --addr ${ADDR}
+	./build/bin/ethstats-server --secret ${SECRET} --addr ${ADDR}
 
 docker-build:
-	docker build -t eskoltech/ethstats:$(VERSION) .
+	docker build -t eskoltech/ethstats-server:$(VERSION) .
 
 docker-start: docker-build
-	docker run -it -p 3000:3000 --name ethstats eskoltech/ethstats:$(VERSION) --secret $(SECRET) --addr $(ADDR)
+	docker run -it -p 3000:3000 --name ethstats eskoltech/ethstats-server:$(VERSION) --secret $(SECRET) --addr $(ADDR)

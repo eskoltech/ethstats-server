@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/eskoltech/ethstats/message"
-	"github.com/eskoltech/ethstats/service"
+	"github.com/eskoltech/ethstats-server/message"
+	"github.com/eskoltech/ethstats-server/service"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )

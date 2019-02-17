@@ -1,7 +1,7 @@
 package broadcast
 
 import (
-	"github.com/eskoltech/ethstats/service"
+	"github.com/eskoltech/ethstats-server/service"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"time"
