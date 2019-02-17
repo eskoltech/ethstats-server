@@ -26,7 +26,7 @@ can't be logged into the server, the server can't receive any notifications from
 For example, to start a server with default network options and a weak secret, just execute:
 
 ```bash
-$ ethstats --secret 1234
+$ ethstats-server --secret 1234
 ```
 >**Note** that for default, the server is started at `localhost:3000` when is not started using `make start`
 
